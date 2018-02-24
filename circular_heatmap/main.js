@@ -1,7 +1,9 @@
-function loadCircularHeatMap (dataset, dom_element_to_append_to,radial_labels,segment_labels) {
+function loadCircularHeatMap (dataset, dom_element_to_append_to,radial_labels,segment_labels, my_trait) {
+
+    console.log(dataset);
 
     var margin = {top: 50, right: 50, bottom: 50, left: 50};
-    var width = 600 - margin.left - margin.right;
+    var width = 500 - margin.left - margin.right;
 
     var height = width;
     var innerRadius = width/14;
@@ -10,7 +12,6 @@ function loadCircularHeatMap (dataset, dom_element_to_append_to,radial_labels,se
     var chart = circularHeatChart()
     .innerRadius(innerRadius)
     .segmentHeight(segmentHeight)
-    .range(["white", "#01579b"])
     .radialLabels(radial_labels)
     .segmentLabels(segment_labels);
 
@@ -32,18 +33,15 @@ function loadCircularHeatMap (dataset, dom_element_to_append_to,radial_labels,se
     .append('div')
     .attr('class', 'tooltip');
 
-    tooltip.append('div')
-    .attr('class', 'month');
-    tooltip.append('div')
-    .attr('class', 'value');
-    tooltip.append('div')
-    .attr('class', 'type');
+    tooltip.append('div').attr('class', 'year');
+    tooltip.append('div').attr('class', 'month');
+    tooltip.append('div').attr('class', 'value');
 
     svg.selectAll("path")
     .on('mouseover', function(d) {
         tooltip.select('.month').html("<b> Month: " + d.month + "</b>");
-        tooltip.select('.type').html("<b> Type: " + d.type + "</b>");
-        tooltip.select('.value').html("<b> Value: " + d.value + "</b>");
+        tooltip.select('.year').html("<b> Year: " + d.year + "</b>");
+        tooltip.select('.value').html("<b> " + my_trait + ": " + (Math.round(d.value * 100)/100) + "</b>");
 
         tooltip.style('display', 'block');
         tooltip.style('opacity',2);
@@ -56,6 +54,15 @@ function loadCircularHeatMap (dataset, dom_element_to_append_to,radial_labels,se
     .on('mouseout', function(d) {
         tooltip.style('display', 'none');
         tooltip.style('opacity',0);
+    });
+  //  console.log('In circular-heat!');
+    svg.selectAll("path")
+    .on('click', function(d) {
+        var selected = d3.select("#top_right_div .selector_station").node();
+        var stationID = stationsDict[stations[selected.selectedIndex]];
+        console.log(stationID);
+        console.log(d.year+'/'+d.month);
+        drawTimeline(stationID.toString(),d.year+'/'+d.month, 30);
     });
 }
 
@@ -83,7 +90,10 @@ function circularHeatChart() {
                 domain = d3.extent(data, accessor);
                 autoDomain = true;
             }
-            var color = d3.scaleLinear().domain(domain).range(range);
+            console.log(domain);
+            var color = d3.scaleQuantize().domain(domain)
+                .range(["#ffffff","#ADDFFF","#56A5EC","#0041C2","#151b54"]);
+
             if(autoDomain)
                 domain = null;
 
@@ -143,6 +153,7 @@ function circularHeatChart() {
                 .style("font-size", "16px")
                 .attr("startOffset", function(d, i) {return i * 100 / numSegments + "%";})
                 .text(function(d) {return d;});
+
         });
 
     }
@@ -217,6 +228,7 @@ function circularHeatChart() {
         accessor = _;
         return chart;
     };
+
 
     return chart;
 }
