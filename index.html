@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+  <style>
+
+  .area {
+    fill: steelblue;
+    clip-path: url(#clip);
+  }
+  .line {
+    fill: none;
+    stroke: black;
+    stroke-width: 5px;
+    opacity: 0.5;
+    clip-path: url(#clip);
+  }
+  .bar{
+    /*fill: none;*/
+    clip-path: url(#clip);
+  }
+
+  .zoom {
+    cursor: move;
+    fill: none;
+    pointer-events: all;
+  }
+
+  .handle {
+    fill: #fff;
+    stroke: #000;
+    stroke-opacity: 0.5;
+    stroke-width: 1.25px;
+  }
+
+  .grid line {
+    stroke: lightgrey;
+    stroke-opacity: 0.7;
+    shape-rendering: crispEdges;
+  }
+
+  </style>
+
+  <script type="text/javascript" src="./circular_heatmap/main.js"></script>
+  <link href="circular_heatmap/style.css" rel="stylesheet" type="text/css">
+
+  <!-- <script type="text/javascript" src="./scatter_plot_matrix/main.js"></script>
+  <link href="scatter_plot_matrix/style.css" rel="stylesheet" type="text/css"> -->
+</head>
+
+<body>
+<div style="width: 1660px; height: 500px;">
+  <!-- Circular Heat Map -->
+  <div id="right_div" style="width: 700px; height: 700px; float: right;"></div>
+  <!-- Historical Line Chart -->
+  <div id="top_div" style="margin: auto; width: 960px; height: 50px; float: left;">
+    <div id="top_left_div" style="float: left;">
+      <input type="button" id="slider_reset" value="Reset" onclick="resetHighlight()"></button>
+      <input id="slider" type="range">
+    </div>
+    <div id="top_right_div" style="float: right; "></div>
+  </div>
+  <!-- <div id="center_div" style="width: 960px; height: 600px; margin: auto;"> -->
+    <svg width="960" height="500" style="display: block; margin: auto;"></svg>
+  <!-- </div> -->
+  <!-- Scatter Plot Matrix -->
+  <!-- <div id="bottom_div" style="width: 960px; height: 960px; margin: auto;">
+  </div> -->
+</div>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+
+var data_path = "./",
+    data_path_day = "./day_avg/",
+    data_path_month = "./month_avg/";
+
+var svg = d3.select("svg"),
+    margin = {top: 20, right: 20, bottom: 110, left: 40},
+    margin2 = {top: 430, right: 20, bottom: 20, left: 40},
+    width = +svg.attr("width") - margin.left - margin.right,
+    height = +svg.attr("height") - margin.top - margin.bottom,
+    height2 = +svg.attr("height") - margin2.top - margin2.bottom;
+
+var parseDate1 = d3.timeParse("%Y/%m/%d"),
+    parseDate2 = d3.timeParse("%Y/%m");
+
+var x = d3.scaleTime().range([0, width]),
+    x2 = d3.scaleTime().range([0, width]),
+    y = d3.scaleLinear().range([height, 0]),
+    y2 = d3.scaleLinear().range([height2, 0]);
+
+var xAxis = d3.axisBottom(x),
+    xAxis2 = d3.axisBottom(x2),
+    yAxis = d3.axisLeft(y);
+
+var brush = d3.brushX()
+    .extent([[0, 0], [width, height2]])
+    .on("brush end", brushed);
+
+var zoom = d3.zoom()
+    .scaleExtent([1, Infinity])
+    .translateExtent([[0, 0], [width, height]])
+    .extent([[0, 0], [width, height]])
+    .on("zoom", zoomed);
+
+var area = d3.area()
+    .curve(d3.curveMonotoneX)
+    .x(function(d) { return x(d.DATE); })
+    .y0(height)   // For not showing line in the bottom
+    .y1(function(d) { return y(d.VALUE); });
+
+var area2 = d3.area()
+    .curve(d3.curveMonotoneX)
+    .x(function(d) { return x2(d.DATE); })
+    .y0(height2)
+    .y1(function(d) { return y2(d.VALUE); });
+
+var line = d3.line()
+    .curve(d3.curveMonotoneX)
+    .x(function(d) { return x(d.DATE); })
+    .y(function(d) { return y(d.VALUE); });
+
+svg.append("defs").append("clipPath")
+  .attr("id", "clip")
+  .append("rect")
+  .attr("width", width)
+  .attr("height", height);
+
+var focus = svg.append("g")
+    .attr("class", "focus")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var context = svg.append("g")
+    .attr("class", "context")
+    .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
+
+var traits = ["SO2", "CO", "O3", "PM10", "PM2.5", "NOx", "NO", "NO2","AMB_TEMP", "RH", "WIND_SPEED",
+  "WIND_DIREC", "WS_HR", "WD_HR"];
+
+var myTraitRange = {"SO2":[0, 18], "CO":[0, 3], "O3":[0, 80], "PM10":[0,200], "PM2.5":[0,100], 
+  "NOx":[0,80], "NO":[0,20], "NO2":[0,40],"AMB_TEMP":[5,45], "RH":[50,100], "WIND_SPEED":[0,10],
+  "WIND_DIREC":[0,360], "WS_HR":[0,10], "WD_HR":[0,360]}
+
+var myTrait = 0;
+var maxDate;
+
+// var stationsDict = {
+//   "基隆":1,"汐止":2,"萬里":3,"新店":4,"土城":5,"板橋":6,"新莊":7,"菜寮":8,"林口":9,"淡水":10,
+//   "士林":11,"中山":12,"萬華":13,"古亭":14,"松山":15,"大同":16,"桃園":17,"大園":18,"觀音":19,"平鎮":20,
+//   "龍潭":21,"湖口":22,"竹東":23,"新竹":24,"頭份":25,"苗栗":26,"三義":27,"豐原":28,"沙鹿":29,"大里":30,
+//   "忠明":31,"西屯":32,"彰化":33,"線西":34,"二林":35,"南投":36,"斗六":37,"崙背":38,"新港":39,"朴子":40,
+//   "台西":41,"嘉義":42,"新營":43,"善化":44,"安南":45,"台南":46,"美濃":47,"橋頭":48,"仁武":49,"鳳山":50,
+//   "大寮":51,"林園":52,"楠梓":53,"左營":54,"前金":56,"前鎮":57,"小港":58,"屏東":59,"潮州":60,
+//   "恆春":61,"台東":62,"花蓮":63,"陽明":64,"宜蘭":65,"冬山":66,"三重":67,"中壢":68,"竹山":69,"永和":70,
+//   "復興":71,"埔里":72,"馬祖":75,"金門":77,"馬公":78,"關山":80,"麥寮":83}
+
+var stationsDict = {"Keelung":1,"Xizhi":2,"Wanli":3,"Xindian":4,"Tucheng":5,"Banqiao":6,"Xinzhuang":7,
+  "Cailiao":8,"Linkou":9,"Danshui":10,"Shilin":11,"Zhongshan":12,"Wanhua":13,"Gutin":14,"Songshan":15,
+  "Datong":16,"Taoyuan":17,"Dayuan":18,"Guanyin":19,"Pingjen":20,"Longtan":21,"Hukou":22,"Zhudong":23,
+  "Hsinchu":24,"Toufen":25,"Miaoli":26,"Sanyi":27,"Fengyuan":28,"Shalu":29,"Dali":30,"Zhongming":31,
+  "Xitun":32,"Changhua":33,"Xianxi":34,"Erlin":35,"Nantou":36,"Douliu":37,"Lunbei":38,"Xingang":39,
+  "Puzi":40,"Taixi":41,"Chiayi":42,"Xinying":43,"Shanhua":44,"Annan":45,"Tainan":46,"Meinong":47,
+  "Qiaotou":48,"Renwu":49,"Fengshan":50,"Daliao":51,"Linyuan":52,"Nanzi":53,"Zuoying":54,"Qianjin":56,
+  "Qianzhen":57,"Xiaogang":58,"Pingtung":59,"Chaozhou":60,"Hengchun":61,"Taitung":62,"Hualien":63,
+  "Yangming":64,"Yilan":65,"Dongshan":66,"Sanchong":67,"Zhongli":68,"Zhushan":69,"Yonghe":70,
+  "Fuxing":71,"Puli":72,"Alishan":75,"Kinmen":77,"Magong":78,"Guanshan":80,"Mailiau":83}
+
+var stations = ["Keelung","Xizhi","Wanli","Xindian","Tucheng","Banqiao","Xinzhuang","Cailiao","Linkou",
+  "Danshui","Shilin","Zhongshan","Wanhua","Gutin","Songshan","Datong","Taoyuan","Dayuan",
+  "Guanyin","Pingjen","Longtan","Hukou","Zhudong","Hsinchu","Toufen","Miaoli","Sanyi",
+  "Fengyuan","Shalu","Dali","Zhongming","Xitun","Changhua","Xianxi","Erlin","Nantou","Douliu",
+  "Lunbei","Xingang","Puzi","Taixi","Chiayi","Xinying","Shanhua","Annan","Tainan","Meinong",
+  "Qiaotou","Renwu","Fengshan","Daliao","Linyuan","Nanzi","Zuoying","Qianjin","Qianzhen",
+  "Xiaogang","Pingtung","Chaozhou","Hengchun","Taitung","Hualien","Yangming","Yilan","Dongshan",
+  "Sanchong","Zhongli","Zhushan","Yonghe","Fuxing","Puli","Alishan","Kinmen","Magong","Guanshan",
+  "Mailiau"];
+
+var stations_cht = [
+  "基隆","汐止","萬里","新店","土城","板橋","新莊","菜寮","林口","淡水", 
+  "士林","中山","萬華","古亭","松山","大同","桃園","大園","觀音","平鎮", 
+  "龍潭","湖口","竹東","新竹","頭份","苗栗","三義","豐原","沙鹿","大里", 
+  "忠明","西屯","彰化","線西","二林","南投","斗六","崙背","新港","朴子", 
+  "台西","嘉義","新營","善化","安南","台南","美濃","橋頭","仁武","鳳山", 
+  "大寮","林園","楠梓","左營","前金","前鎮","小港","屏東","潮州","恆春",
+  "台東","花蓮","陽明","宜蘭","冬山","三重","中壢","竹山","永和","復興",
+  "埔里","馬祖","金門","馬公","關山","麥寮"];
+
+
+var myStation = 0;
+
+
+// Initialization
+d3.csv(data_path_day + "day_csv_station_" + stationsDict[stations[myStation]] + ".csv", function(error, data) {
+  if (error) throw error;
+
+  // Add the selector_traits
+  var selector_traits = d3.select('#top_right_div')
+    .append('select')
+    .attr('class','selector_traits')
+    .style("margin-left", "100px")
+    .on('change',function(){
+      for (var i = 0; i < traits.length; i++) {
+        if(traits[i] == this.value) myTrait = i;
+      }
+      // remove historical line graph
+      focus.selectAll("*").remove();
+      context.selectAll("*").remove();
+      drawHistoricalFigure(myTrait, "2016/01", 12, myStation);
+      // remove circular heat map
+      d3.select("#right_div").selectAll("*").remove();
+      drawCircularFigure(myTrait, myStation);
+      console.log(traits[myTrait]);
+      d3.select('#selector_traits_notes').text(traits[myTrait] + ' is selected.')
+    });
+
+  var selector_traits_notes = d3.select('#top_right_div')
+      .append('text')
+      .style("font-size", "13px")
+      .style("margin-left", "10px")
+      .attr('id', 'selector_traits_notes')
+      .text(traits[myTrait] + ' is selected.');
+
+  var selector_traits_options = selector_traits.selectAll('option')
+    .data(traits).enter()
+    .append('option')
+    .text(function (d) { return d; });
+
+// Add the selector_station
+  var selector_station = d3.select('#top_right_div')
+    .append('select')
+    .attr('class','selector_station')
+    .style("margin-left", "100px")
+    .on('change',function(){
+      for (var i = 0; i < stations.length; i++) {
+        if(stations[i] == this.value) myStation = i;
+      }
+      // remove historical line graph
+      focus.selectAll("*").remove();
+      context.selectAll("*").remove();
+      drawHistoricalFigure(myTrait, "2016/01", 12, myStation);
+      // remove circular heat map
+      d3.select("#right_div").selectAll("*").remove();
+      drawCircularFigure(myTrait, myStation);
+      console.log(stations_cht[myStation]);
+      d3.select('#selector_station_notes').text(stations[myStation] + '( ' + stations_cht[myStation] +
+       ' ) is selected.')
+    });
+
+  var selector_station_notes = d3.select('#top_right_div')
+      .append('text')
+      .style("font-size", "13px")
+      .style("margin-left", "10px")
+      .attr('id', 'selector_station_notes')
+      .text(stations[myStation] + ' is selected.');
+
+  var selector_station_options = selector_station.selectAll('option')
+    .data(stations).enter()
+    .append('option')
+    .text(function (d) {return d; });
+
+
+  // Main function starts here
+  drawHistoricalFigure(myTrait, "2016/01", 12, myStation);
+  drawCircularFigure(myTrait, myStation);
+  // drawScatterPlotMatrixFigure(myTrait, myStation);
+
+});
+
+// function drawScatterPlotMatrixFigure(myTrait, myStation){
+
+//   d3.csv(data_path + "day_csv_station_" + stationsDict[stations[myStation]] + ".csv", type1, function(error, data) {
+//     if (error) throw error;
+
+//     // Should be a number not string
+//     data.forEach(function(d){
+//       for (var i = 0; i < traits.length; i++) {
+//         d[traits[i]] = +d[traits[i]];
+//       }  
+//     });
+
+//     loadScatterPlotMatrix(data, "#bottom_div", traits[myTrait]);
+//   });
+// }
+
+// Circular Heat Map
+function drawCircularFigure(myTrait, myStation){
+
+  d3.csv(data_path_month + "month_csv_station_" + stationsDict[stations[myStation]] + ".csv", type2, function(error, data) {
+    if (error) throw error;
+
+    // Should be a number not string
+    data.forEach(function(d){
+      for (var i = 0; i < traits.length; i++) {
+        d[traits[i]] = +d[traits[i]];
+      }  
+    });
+
+    var radial_labels = ["2012","2013","2014","2015","2016"];
+    var segment_labels = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+    var inputData =[]
+    for (var i = 0; i < data.length; i++) {
+      inputData.push({"month": data[i].DATE.getMonth()+1, 
+        "year": data[i].DATE.getFullYear(), "value": data[i][traits[myTrait]]});
+    }
+
+    loadCircularHeatMap(inputData,"#right_div",radial_labels, segment_labels, myTrait, myStation);
+
+  });
+}
+
+
+function drawHistoricalFigure(myTrait, initDate, initDateLen, myStation){
+  
+  d3.csv(data_path_day + "day_csv_station_" + stationsDict[stations[myStation]] + ".csv", type1, function(error, day_data) {
+    if (error) throw error;
+
+    d3.csv(data_path_month + "month_csv_station_" + stationsDict[stations[myStation]] + ".csv", type2, function(error, month_data) {
+      if (error) throw error;
+
+      // console.log(day_data);
+
+      dictData = [];
+      dictAvg = [];
+      day_data.forEach(function(d){
+        d[traits[myTrait]] = +d[traits[myTrait]];
+        dictData.push({"DATE": d.DATE, "VALUE": d[traits[myTrait]]});
+      });
+      // console.log(dictData);
+
+      // console.log(month_data);
+      month_data.forEach(function(d){
+        d[traits[myTrait]] = +d[traits[myTrait]];
+        dictAvg.push({"DATE": d.DATE, "VALUE": d[traits[myTrait]]});
+      });
+      maxDate = d3.max(month_data, function(d) { return d.DATE; });
+      maxDateValue = 0;
+      for (var i = 0; i < dictAvg.length; i++) {
+        if(dictAvg[i]["DATE"] == maxDate){
+          maxDateValue = dictAvg[i]["VALUE"];
+        }
+      }
+      maxDate = parseDate1(maxDate.getFullYear().toString() + "/" + (maxDate.getMonth() + 1) + "/31");
+      dictAvg.push({"DATE": maxDate, "VALUE": maxDateValue});
+      // console.log(dictAvg);  
+
+      // console.log(traits);
+      var MAX_VALUE = 1.01 * d3.max(dictData, function(d) { return d.VALUE; });
+      document.getElementById("slider").max = MAX_VALUE.toString();
+      document.getElementById("slider").value = MAX_VALUE/2;
+      document.getElementById("slider").step = MAX_VALUE/100;
+      d3.select("#slider").on("input", function() { hightlight(+this.value); });
+      d3.select("#hightlight_text").remove();
+
+      x.domain(d3.extent(dictData, function(d) { return d.DATE; }));
+      y.domain([myTraitRange[traits[myTrait]][0], Math.min(
+        myTraitRange[traits[myTrait]][1], 1.1 * d3.max(dictData, function(d) { return d.VALUE; }))]);
+      x2.domain(x.domain());
+      y2.domain(y.domain());
+
+
+      // gridlines in y axis function
+      focus.append("g")     
+          .attr("class", "grid")
+          .call(d3.axisLeft(y).tickSize(-width).tickFormat(""));
+      
+      focus.append("path")
+          .datum(dictData)
+          .attr("class", "area")
+          .attr("d", area);
+
+      focus.append("g")
+          .attr("class", "axis axis--x")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis);
+
+      focus.append("g")
+          .attr("class", "axis axis--y")
+          .call(yAxis);
+
+      focus.selectAll(".bar")
+          .data(dictData)
+          .enter().append("rect")
+          .attr("class", "bar")
+          .attr("x", function(d) { return x(d.DATE); })
+          .attr("y", function(d) { return y(d.VALUE); })
+          .attr('fill', "none")
+          .attr("width", 2)
+          .attr("height", function(d) { return height - y(d.VALUE); })
+          .on("mouseover", function(d, i){
+            svg.select("g").append("text")
+              .text(d.DATE + "(" + d.VALUE + ")")
+              .attr("transform", "translate(100,100)")
+              .attr("x", 100)
+              .attr("y", 200)
+              .style("text-anchor", "middle")
+              .attr("font-family", "sans-serif")
+              .attr("font-size", "28px")
+              .style("fill", "black");
+          });
+
+      focus.append("path")
+          .datum(dictAvg)
+          .attr("class", "line")
+          .attr("d", line);
+
+      context.append("path")
+          .datum(dictData)
+          .attr("class", "area")
+          .attr("d", area2);
+
+      context.append("g")
+          .attr("class", "axis axis--x")
+          .attr("transform", "translate(0," + height2 + ")")
+          .call(xAxis2);
+
+      context.append("g")
+          .attr("class", "brush")
+          .call(brush)
+          .call(brush.move, x.range());
+
+      svg.append("rect")
+          .attr("class", "zoom")
+          .attr("width", width)
+          .attr("height", height)
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+          .call(zoom);
+
+      // Set initial zoom level
+      svg.call(zoom.transform, d3.zoomIdentity.scale(month_data.length/initDateLen)
+        .translate(-x(parseDate2(initDate)), 0));
+
+    });
+
+  });
+
+}
+
+
+
+function type1(d) {
+  d.DATE = parseDate1(d.DATE);
+  return d;
+}
+function type2(d) {
+  d.DATE = parseDate2(d.DATE);
+  return d;
+}
+
+function brushed() {
+  if (d3.event.sourceEvent && d3.event.sourceEvent.type === "zoom") return; // ignore brush-by-zoom
+  var s = d3.event.selection || x2.range();
+  x.domain(s.map(x2.invert, x2));
+  focus.select(".area").attr("d", area);
+  focus.select(".axis--x").call(xAxis);
+  focus.selectAll(".bar").attr("x", function(d) { return x(d.DATE); });
+  focus.select(".line").attr("d", line);
+  svg.select(".zoom").call(zoom.transform, d3.zoomIdentity
+      .scale(width / (s[1] - s[0]))
+      .translate(-s[0], 0));
+}
+
+function zoomed() {
+  if (d3.event.sourceEvent && d3.event.sourceEvent.type === "brush") return; // ignore zoom-by-brush
+  var t = d3.event.transform;
+  x.domain(t.rescaleX(x2).domain());
+  focus.select(".area").attr("d", area);
+  focus.select(".axis--x").call(xAxis);
+  focus.selectAll(".bar").attr("x", function(d) { return x(d.DATE); });
+  focus.select(".line").attr("d", line);
+  context.select(".brush").call(brush.move, x.range().map(t.invertX, t));
+}
+
+
+function hightlight(newValue)
+{
+  d3.select("#hightlight_text").remove();
+  d3.select("#top_left_div").append('text').attr('id',"hightlight_text")
+    .text(Math.ceil(newValue*100)/100);
+  // document.getElementById("slider_text").innerHTML = newValue;
+  focus.selectAll(".bar").attr('fill', function(d) { 
+    if(d.VALUE > newValue) return "red"; 
+    else return "none";
+  });
+}
+
+function resetHighlight(){
+  d3.select("#hightlight_text").remove();
+  // document.getElementById("slider").value = MAX_VALUE/2;
+  focus.selectAll(".bar").attr('fill', "none");
+}
+
+
+
+</script>
+</body>
+</html>
