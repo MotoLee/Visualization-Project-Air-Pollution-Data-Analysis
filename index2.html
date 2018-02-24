@@ -143,6 +143,129 @@ var myTraitRange = {"SO2":[0, 18], "CO":[0, 3], "O3":[0, 80], "PM10":[0,200], "P
 var myTrait = 0;
 var maxDate;
 
+var myTraits = ["SO2", "CO", "O3", "PM10"];
+
+
+var selector_station = d3.select("#selectors").append('select')
+  .attr('class','selector_station')
+  .on('change',function(){ 
+    for (var i = 0; i < stations.length; i++) {
+        if(stations[i] == this.value) myStation = i;
+      }
+    d3.select("#example").selectAll("*").remove();
+    DrawParallelCoordinate(myTraits, myStation); 
+  });
+var selector_station_notes = d3.select('#selectors').append('text')
+  .style("font-size", "13px")
+  .style("margin-left", "10px")
+  .attr('id', 'selector_station_notes')
+  .text(stations[myStation] + ' is selected.');
+var selector_station_options = selector_station.selectAll('option')
+  .data(stations).enter()
+  .append('option')
+  .text(function (d) {return d; });
+
+var selector_traits_0 = d3.select("#selectors").append('select')
+  .attr('id','selector_traits_0')
+  .style("margin-left", "120px")
+  .on('change',function(){ 
+    myTraits[0] = this.value; 
+    d3.select("#example").selectAll("*").remove();
+    DrawParallelCoordinate(myTraits, myStation); 
+  });
+
+var selector_traits_0_options = selector_traits_0.selectAll('option')
+  .data(traits).enter().append('option')
+  .text(function (d) { return d; });
+
+var selector_traits_1 = d3.select("#selectors").append('select')
+  .attr('id','selector_traits_1')
+  .style("margin-left", "20px")
+  .on('change',function(){ 
+    myTraits[1] = this.value; 
+    d3.select("#example").selectAll("*").remove();
+    DrawParallelCoordinate(myTraits, myStation); 
+  });
+
+var selector_traits_1_options = selector_traits_1.selectAll('option')
+  .data(traits).enter().append('option')
+  .text(function (d) { return d; });
+
+var selector_traits_2 = d3.select("#selectors").append('select')
+  .attr('id','selector_traits_2')
+  .style("margin-left", "20px")
+  .on('change',function(){ 
+    myTraits[2] = this.value; 
+    d3.select("#example").selectAll("*").remove();
+    DrawParallelCoordinate(myTraits, myStation); 
+  });
+
+var selector_traits_2_options = selector_traits_2.selectAll('option')
+  .data(traits).enter().append('option')
+  .text(function (d) { return d; });
+
+var selector_traits_3 = d3.select("#selectors").append('select')
+  .attr('id','selector_traits_3')
+  .style("margin-left", "20px")
+  .on('change',function(){ 
+    myTraits[3] = this.value; 
+    d3.select("#example").selectAll("*").remove();
+    DrawParallelCoordinate(myTraits, myStation); 
+  });
+
+var selector_traits_3_options = selector_traits_3.selectAll('option')
+  .data(traits).enter().append('option')
+  .text(function (d) { return d; });
+
+
+function DrawParallelCoordinate(myTraits, myStation){
+
+    var parcoords = d3.parcoords()("#example")
+      .color(color)
+      .alpha(0.5);
+
+    // load csv file and create the chart
+    d3.csv('month_avg/month_csv_station_' + stationsDict[stations[myStation]] + '.csv', function(data) {
+
+        // Data pro-processing
+        new_data = [];
+        for (var i = 0; i < data.length; i++) {
+            new_data.push({"YEAR": parseDate2.parse(data[i]["DATE"]).getFullYear(),
+                "MONTH": (parseDate2.parse(data[i]["DATE"]).getMonth()+1)});
+            new_data[i][myTraits[0]] = Math.round(data[i][myTraits[0]] * 1000) / 1000;
+            new_data[i][myTraits[1]] = Math.round(data[i][myTraits[1]] * 1000) / 1000;
+            new_data[i][myTraits[2]] = Math.round(data[i][myTraits[2]] * 1000) / 1000;
+            new_data[i][myTraits[3]] = Math.round(data[i][myTraits[3]] * 1000) / 1000;
+        }
+
+        // Main
+        parcoords.data(new_data).render().brushMode("1D-axes");  // enable brushing
+
+        // create data table, row hover highlighting
+        var grid = d3.divgrid();
+        d3.select("#grid")
+            .datum(new_data.slice(0,12))
+            .call(grid)
+            .selectAll(".row")
+            .on({
+                "mouseover": function(d) { parcoords.highlight([d]) },
+                "mouseout": parcoords.unhighlight
+            });
+
+        // update data table on brush event
+        parcoords.on("brush", function(d) {
+            d3.select("#grid")
+                .datum(d.slice(0,10))
+                .call(grid)
+                .selectAll(".row")
+                .on({
+                  "mouseover": function(d) { parcoords.highlight([d]) },
+                  "mouseout": parcoords.unhighlight
+            });
+        });
+    });
+}
+
 // var stationsDict = {
 //   "基隆":1,"汐止":2,"萬里":3,"新店":4,"土城":5,"板橋":6,"新莊":7,"菜寮":8,"林口":9,"淡水":10,
 //   "士林":11,"中山":12,"萬華":13,"古亭":14,"松山":15,"大同":16,"桃園":17,"大園":18,"觀音":19,"平鎮":20,
@@ -261,8 +384,8 @@ d3.csv(data_path_day + "day_csv_station_" + stationsDict[stations[myStation]] + 
   // Main function starts here
   drawHistoricalFigure(myTrait, "2016/01", 12, myStation);
   drawCircularFigure(myTrait, myStation);
-  // drawScatterPlotMatrixFigure(myTrait, myStation);
-
+  drawScatterPlotMatrixFigure(myTrait, myStation);
+  DrawParallelCoordinate(myTraits, myStation);
 });
 
 // function drawScatterPlotMatrixFigure(myTrait, myStation){
