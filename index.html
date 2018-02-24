@@ -69,10 +69,35 @@
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script>
 
+// Dataset path
 var data_path = "./",
     data_path_day = "./day_avg/",
     data_path_month = "./month_avg/";
 
+// Dictionary of station names
+var stationsDict = {"Keelung":1,"Xizhi":2,"Wanli":3,"Xindian":4,"Tucheng":5,"Banqiao":6,"Xinzhuang":7,
+  "Cailiao":8,"Linkou":9,"Danshui":10,"Shilin":11,"Zhongshan":12,"Wanhua":13,"Gutin":14,"Songshan":15,
+  "Datong":16,"Taoyuan":17,"Dayuan":18,"Guanyin":19,"Pingjen":20,"Longtan":21,"Hukou":22,"Zhudong":23,
+  "Hsinchu":24,"Toufen":25,"Miaoli":26,"Sanyi":27,"Fengyuan":28,"Shalu":29,"Dali":30,"Zhongming":31,
+  "Xitun":32,"Changhua":33,"Xianxi":34,"Erlin":35,"Nantou":36,"Douliu":37,"Lunbei":38,"Xingang":39,
+  "Puzi":40,"Taixi":41,"Chiayi":42,"Xinying":43,"Shanhua":44,"Annan":45,"Tainan":46,"Meinong":47,
+  "Qiaotou":48,"Renwu":49,"Fengshan":50,"Daliao":51,"Linyuan":52,"Nanzi":53,"Zuoying":54,"Qianjin":56,
+  "Qianzhen":57,"Xiaogang":58,"Pingtung":59,"Chaozhou":60,"Hengchun":61,"Taitung":62,"Hualien":63,
+  "Yangming":64,"Yilan":65,"Dongshan":66,"Sanchong":67,"Zhongli":68,"Zhushan":69,"Yonghe":70,
+  "Fuxing":71,"Puli":72,"Alishan":75,"Kinmen":77,"Magong":78,"Guanshan":80,"Mailiau":83}
+
+var stations = ["Keelung","Xizhi","Wanli","Xindian","Tucheng","Banqiao","Xinzhuang","Cailiao","Linkou",
+  "Danshui","Shilin","Zhongshan","Wanhua","Gutin","Songshan","Datong","Taoyuan","Dayuan",
+  "Guanyin","Pingjen","Longtan","Hukou","Zhudong","Hsinchu","Toufen","Miaoli","Sanyi",
+  "Fengyuan","Shalu","Dali","Zhongming","Xitun","Changhua","Xianxi","Erlin","Nantou","Douliu",
+  "Lunbei","Xingang","Puzi","Taixi","Chiayi","Xinying","Shanhua","Annan","Tainan","Meinong",
+  "Qiaotou","Renwu","Fengshan","Daliao","Linyuan","Nanzi","Zuoying","Qianjin","Qianzhen",
+  "Xiaogang","Pingtung","Chaozhou","Hengchun","Taitung","Hualien","Yangming","Yilan","Dongshan",
+  "Sanchong","Zhongli","Zhushan","Yonghe","Fuxing","Puli","Alishan","Kinmen","Magong","Guanshan",
+  "Mailiau"];
+
+
+// 
 var svg = d3.select("svg"),
     margin = {top: 20, right: 20, bottom: 110, left: 40},
     margin2 = {top: 430, right: 20, bottom: 20, left: 40},
@@ -119,12 +144,6 @@ var line = d3.line()
     .x(function(d) { return x(d.DATE); })
     .y(function(d) { return y(d.VALUE); });
 
-svg.append("defs").append("clipPath")
-  .attr("id", "clip")
-  .append("rect")
-  .attr("width", width)
-  .attr("height", height);
-
 var focus = svg.append("g")
     .attr("class", "focus")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
@@ -141,54 +160,20 @@ var myTraitRange = {"SO2":[0, 18], "CO":[0, 3], "O3":[0, 80], "PM10":[0,200], "P
   "WIND_DIREC":[0,360], "WS_HR":[0,10], "WD_HR":[0,360]}
 
 var myTrait = 0;
-var maxDate;
-
-// var stationsDict = {
-//   "基隆":1,"汐止":2,"萬里":3,"新店":4,"土城":5,"板橋":6,"新莊":7,"菜寮":8,"林口":9,"淡水":10,
-//   "士林":11,"中山":12,"萬華":13,"古亭":14,"松山":15,"大同":16,"桃園":17,"大園":18,"觀音":19,"平鎮":20,
-//   "龍潭":21,"湖口":22,"竹東":23,"新竹":24,"頭份":25,"苗栗":26,"三義":27,"豐原":28,"沙鹿":29,"大里":30,
-//   "忠明":31,"西屯":32,"彰化":33,"線西":34,"二林":35,"南投":36,"斗六":37,"崙背":38,"新港":39,"朴子":40,
-//   "台西":41,"嘉義":42,"新營":43,"善化":44,"安南":45,"台南":46,"美濃":47,"橋頭":48,"仁武":49,"鳳山":50,
-//   "大寮":51,"林園":52,"楠梓":53,"左營":54,"前金":56,"前鎮":57,"小港":58,"屏東":59,"潮州":60,
-//   "恆春":61,"台東":62,"花蓮":63,"陽明":64,"宜蘭":65,"冬山":66,"三重":67,"中壢":68,"竹山":69,"永和":70,
-//   "復興":71,"埔里":72,"馬祖":75,"金門":77,"馬公":78,"關山":80,"麥寮":83}
-
-var stationsDict = {"Keelung":1,"Xizhi":2,"Wanli":3,"Xindian":4,"Tucheng":5,"Banqiao":6,"Xinzhuang":7,
-  "Cailiao":8,"Linkou":9,"Danshui":10,"Shilin":11,"Zhongshan":12,"Wanhua":13,"Gutin":14,"Songshan":15,
-  "Datong":16,"Taoyuan":17,"Dayuan":18,"Guanyin":19,"Pingjen":20,"Longtan":21,"Hukou":22,"Zhudong":23,
-  "Hsinchu":24,"Toufen":25,"Miaoli":26,"Sanyi":27,"Fengyuan":28,"Shalu":29,"Dali":30,"Zhongming":31,
-  "Xitun":32,"Changhua":33,"Xianxi":34,"Erlin":35,"Nantou":36,"Douliu":37,"Lunbei":38,"Xingang":39,
-  "Puzi":40,"Taixi":41,"Chiayi":42,"Xinying":43,"Shanhua":44,"Annan":45,"Tainan":46,"Meinong":47,
-  "Qiaotou":48,"Renwu":49,"Fengshan":50,"Daliao":51,"Linyuan":52,"Nanzi":53,"Zuoying":54,"Qianjin":56,
-  "Qianzhen":57,"Xiaogang":58,"Pingtung":59,"Chaozhou":60,"Hengchun":61,"Taitung":62,"Hualien":63,
-  "Yangming":64,"Yilan":65,"Dongshan":66,"Sanchong":67,"Zhongli":68,"Zhushan":69,"Yonghe":70,
-  "Fuxing":71,"Puli":72,"Alishan":75,"Kinmen":77,"Magong":78,"Guanshan":80,"Mailiau":83}
-
-var stations = ["Keelung","Xizhi","Wanli","Xindian","Tucheng","Banqiao","Xinzhuang","Cailiao","Linkou",
-  "Danshui","Shilin","Zhongshan","Wanhua","Gutin","Songshan","Datong","Taoyuan","Dayuan",
-  "Guanyin","Pingjen","Longtan","Hukou","Zhudong","Hsinchu","Toufen","Miaoli","Sanyi",
-  "Fengyuan","Shalu","Dali","Zhongming","Xitun","Changhua","Xianxi","Erlin","Nantou","Douliu",
-  "Lunbei","Xingang","Puzi","Taixi","Chiayi","Xinying","Shanhua","Annan","Tainan","Meinong",
-  "Qiaotou","Renwu","Fengshan","Daliao","Linyuan","Nanzi","Zuoying","Qianjin","Qianzhen",
-  "Xiaogang","Pingtung","Chaozhou","Hengchun","Taitung","Hualien","Yangming","Yilan","Dongshan",
-  "Sanchong","Zhongli","Zhushan","Yonghe","Fuxing","Puli","Alishan","Kinmen","Magong","Guanshan",
-  "Mailiau"];
-
-var stations_cht = [
-  "基隆","汐止","萬里","新店","土城","板橋","新莊","菜寮","林口","淡水", 
-  "士林","中山","萬華","古亭","松山","大同","桃園","大園","觀音","平鎮", 
-  "龍潭","湖口","竹東","新竹","頭份","苗栗","三義","豐原","沙鹿","大里", 
-  "忠明","西屯","彰化","線西","二林","南投","斗六","崙背","新港","朴子", 
-  "台西","嘉義","新營","善化","安南","台南","美濃","橋頭","仁武","鳳山", 
-  "大寮","林園","楠梓","左營","前金","前鎮","小港","屏東","潮州","恆春",
-  "台東","花蓮","陽明","宜蘭","冬山","三重","中壢","竹山","永和","復興",
-  "埔里","馬祖","金門","馬公","關山","麥寮"];
-
 
 var myStation = 0;
 
 
-// Initialization
+// Main function
+
+// Append an SVG element
+svg.append("defs").append("clipPath")
+  .attr("id", "clip")
+  .append("rect")
+  .attr("width", width)
+  .attr("height", height);
+
+// Read data
 d3.csv(data_path_day + "day_csv_station_" + stationsDict[stations[myStation]] + ".csv", function(error, data) {
   if (error) throw error;
 
@@ -224,7 +209,7 @@ d3.csv(data_path_day + "day_csv_station_" + stationsDict[stations[myStation]] + 
     .append('option')
     .text(function (d) { return d; });
 
-// Add the selector_station
+  // Add the selector_station
   var selector_station = d3.select('#top_right_div')
     .append('select')
     .attr('class','selector_station')
@@ -240,9 +225,8 @@ d3.csv(data_path_day + "day_csv_station_" + stationsDict[stations[myStation]] + 
       // remove circular heat map
       d3.select("#right_div").selectAll("*").remove();
       drawCircularFigure(myTrait, myStation);
-      console.log(stations_cht[myStation]);
-      d3.select('#selector_station_notes').text(stations[myStation] + '( ' + stations_cht[myStation] +
-       ' ) is selected.')
+      console.log(stations[myStation]);
+      d3.select('#selector_station_notes').text(stations[myStation] + ' is selected.')
     });
 
   var selector_station_notes = d3.select('#top_right_div')
@@ -258,9 +242,11 @@ d3.csv(data_path_day + "day_csv_station_" + stationsDict[stations[myStation]] + 
     .text(function (d) {return d; });
 
 
-  // Main function starts here
+  // Draw all figures
   drawHistoricalFigure(myTrait, "2016/01", 12, myStation);
+
   drawCircularFigure(myTrait, myStation);
+
   drawScatterPlotMatrixFigure(myTrait, myStation);
 
 });
@@ -317,10 +303,14 @@ function drawHistoricalFigure(myTrait, initDate, initDateLen, myStation){
     d3.csv(data_path_month + "month_csv_station_" + stationsDict[stations[myStation]] + ".csv", type2, function(error, month_data) {
       if (error) throw error;
 
-      // console.log(day_data);
+      var dictData = [];
+      var dictAvg = [];
 
-      dictData = [];
-      dictAvg = [];
+      var maxDate;
+      var maxDateValue = 0;
+
+      var MAX_VALUE;
+
       day_data.forEach(function(d){
         d[traits[myTrait]] = +d[traits[myTrait]];
         dictData.push({"DATE": d.DATE, "VALUE": d[traits[myTrait]]});
@@ -332,19 +322,18 @@ function drawHistoricalFigure(myTrait, initDate, initDateLen, myStation){
         d[traits[myTrait]] = +d[traits[myTrait]];
         dictAvg.push({"DATE": d.DATE, "VALUE": d[traits[myTrait]]});
       });
+
       maxDate = d3.max(month_data, function(d) { return d.DATE; });
-      maxDateValue = 0;
+      maxDate = parseDate1(maxDate.getFullYear().toString() + "/" + (maxDate.getMonth() + 1) + "/31");
       for (var i = 0; i < dictAvg.length; i++) {
         if(dictAvg[i]["DATE"] == maxDate){
           maxDateValue = dictAvg[i]["VALUE"];
         }
       }
-      maxDate = parseDate1(maxDate.getFullYear().toString() + "/" + (maxDate.getMonth() + 1) + "/31");
       dictAvg.push({"DATE": maxDate, "VALUE": maxDateValue});
-      // console.log(dictAvg);  
 
-      // console.log(traits);
-      var MAX_VALUE = 1.01 * d3.max(dictData, function(d) { return d.VALUE; });
+
+      MAX_VALUE = 1.01 * d3.max(dictData, function(d) { return d.VALUE; });
       document.getElementById("slider").max = MAX_VALUE.toString();
       document.getElementById("slider").value = MAX_VALUE/2;
       document.getElementById("slider").step = MAX_VALUE/100;
@@ -435,8 +424,6 @@ function drawHistoricalFigure(myTrait, initDate, initDateLen, myStation){
 
 }
 
-
-
 function type1(d) {
   d.DATE = parseDate1(d.DATE);
   return d;
@@ -448,7 +435,9 @@ function type2(d) {
 
 function brushed() {
   if (d3.event.sourceEvent && d3.event.sourceEvent.type === "zoom") return; // ignore brush-by-zoom
+  
   var s = d3.event.selection || x2.range();
+
   x.domain(s.map(x2.invert, x2));
   focus.select(".area").attr("d", area);
   focus.select(".axis--x").call(xAxis);
@@ -461,7 +450,9 @@ function brushed() {
 
 function zoomed() {
   if (d3.event.sourceEvent && d3.event.sourceEvent.type === "brush") return; // ignore zoom-by-brush
+
   var t = d3.event.transform;
+
   x.domain(t.rescaleX(x2).domain());
   focus.select(".area").attr("d", area);
   focus.select(".axis--x").call(xAxis);
@@ -471,8 +462,7 @@ function zoomed() {
 }
 
 
-function hightlight(newValue)
-{
+function hightlight(newValue) {
   d3.select("#hightlight_text").remove();
   d3.select("#top_left_div").append('text').attr('id',"hightlight_text")
     .text(Math.ceil(newValue*100)/100);
@@ -483,9 +473,8 @@ function hightlight(newValue)
   });
 }
 
-function resetHighlight(){
+function resetHighlight() {
   d3.select("#hightlight_text").remove();
-  // document.getElementById("slider").value = MAX_VALUE/2;
   focus.selectAll(".bar").attr('fill', "none");
 }
 
