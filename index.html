@@ -265,21 +265,21 @@ d3.csv(data_path_day + "day_csv_station_" + stationsDict[stations[myStation]] + 
 
 });
 
-// function drawScatterPlotMatrixFigure(myTrait, myStation){
+function drawScatterPlotMatrixFigure(myTrait, myStation){
 
-//   d3.csv(data_path + "day_csv_station_" + stationsDict[stations[myStation]] + ".csv", type1, function(error, data) {
-//     if (error) throw error;
+  d3.csv(data_path + "day_csv_station_" + stationsDict[stations[myStation]] + ".csv", type1, function(error, data) {
+    if (error) throw error;
 
-//     // Should be a number not string
-//     data.forEach(function(d){
-//       for (var i = 0; i < traits.length; i++) {
-//         d[traits[i]] = +d[traits[i]];
-//       }  
-//     });
+    // Should be a number not string
+    data.forEach(function(d){
+      for (var i = 0; i < traits.length; i++) {
+        d[traits[i]] = +d[traits[i]];
+      }  
+    });
 
-//     loadScatterPlotMatrix(data, "#bottom_div", traits[myTrait]);
-//   });
-// }
+    loadScatterPlotMatrix(data, "#bottom_div", traits[myTrait]);
+  });
+}
 
 // Circular Heat Map
 function drawCircularFigure(myTrait, myStation){
