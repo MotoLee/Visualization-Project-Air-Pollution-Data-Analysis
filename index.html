@@ -218,7 +218,7 @@ var selector_traits_3_options = selector_traits_3.selectAll('option')
   .text(function (d) { return d; });
 
 
-function DrawParallelCoordinate(myTraits){
+function DrawParallelCoordinate(myTraits, myStation){
 
     var parcoords = d3.parcoords()("#example")
       .color(color)
@@ -384,8 +384,8 @@ d3.csv(data_path_day + "day_csv_station_" + stationsDict[stations[myStation]] + 
   // Main function starts here
   drawHistoricalFigure(myTrait, "2016/01", 12, myStation);
   drawCircularFigure(myTrait, myStation);
-  // drawScatterPlotMatrixFigure(myTrait, myStation);
-
+  drawScatterPlotMatrixFigure(myTrait, myStation);
+  DrawParallelCoordinate(myTraits, myStation);
 });
 
 // function drawScatterPlotMatrixFigure(myTrait, myStation){
