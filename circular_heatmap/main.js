@@ -1,6 +1,4 @@
-function loadCircularHeatMap (dataset, dom_element_to_append_to,radial_labels,segment_labels, my_trait) {
-
-    console.log(dataset);
+function loadCircularHeatMap (dataset, dom_element_to_append_to,radial_labels,segment_labels, my_trait, my_station) {
 
     var margin = {top: 50, right: 50, bottom: 50, left: 50};
     var width = 500 - margin.left - margin.right;
@@ -41,7 +39,7 @@ function loadCircularHeatMap (dataset, dom_element_to_append_to,radial_labels,se
     .on('mouseover', function(d) {
         tooltip.select('.month').html("<b> Month: " + d.month + "</b>");
         tooltip.select('.year').html("<b> Year: " + d.year + "</b>");
-        tooltip.select('.value').html("<b> " + my_trait + ": " + (Math.round(d.value * 100)/100) + "</b>");
+        tooltip.select('.value').html("<b> " + traits[my_trait] + ": " + (Math.round(d.value * 100)/100) + "</b>");
 
         tooltip.style('display', 'block');
         tooltip.style('opacity',2);
@@ -55,15 +53,17 @@ function loadCircularHeatMap (dataset, dom_element_to_append_to,radial_labels,se
         tooltip.style('display', 'none');
         tooltip.style('opacity',0);
     });
-  //  console.log('In circular-heat!');
+
     svg.selectAll("path")
     .on('click', function(d) {
-        var selected = d3.select("#top_right_div .selector_station").node();
-        var stationID = stationsDict[stations[selected.selectedIndex]];
-        console.log(stationID);
         console.log(d.year+'/'+d.month);
-        drawTimeline(stationID.toString(),d.year+'/'+d.month, 30);
+
+        // remove historical line graph
+        focus.selectAll("*").remove();
+        context.selectAll("*").remove();
+        drawHistoricalFigure(my_trait, d.year+'/'+d.month, 1, my_station);
     });
+
 }
 
 function circularHeatChart() {
@@ -90,9 +90,10 @@ function circularHeatChart() {
                 domain = d3.extent(data, accessor);
                 autoDomain = true;
             }
-            console.log(domain);
+
             var color = d3.scaleQuantize().domain(domain)
                 .range(["#ffffff","#ADDFFF","#56A5EC","#0041C2","#151b54"]);
+
 
             if(autoDomain)
                 domain = null;
@@ -153,6 +154,31 @@ function circularHeatChart() {
                 .style("font-size", "16px")
                 .attr("startOffset", function(d, i) {return i * 100 / numSegments + "%";})
                 .text(function(d) {return d;});
+
+            var legend = d3.select("svg").selectAll(".legend")
+                .data(["#ffffff","#ADDFFF","#56A5EC","#0041C2","#151b54"])
+                .enter()
+                .append("g")
+                .attr("class", "legend")
+                .attr("transform", function(d, i) { return "translate(0," + (i * 20 + 10) + ")"; });
+
+            // draw legend colored rectangles
+            legend.append("rect")
+                .attr("x", width-40)
+                .attr("y", 10)
+                .attr("width", 16)
+                .attr("height", 16)
+                .attr("style", "outline: thin solid black;")
+                .style("fill", function(d){ return d; });
+
+            // draw legend text
+            legend.append("text")
+                .attr("x", width - 24)
+                .attr("y", 9)
+                .attr("dy", ".4em")
+                .style("text-anchor", "end")
+                .style("font-size","12px")
+                .text(function(d) { return "group " + d;})
 
         });
 
@@ -228,7 +254,6 @@ function circularHeatChart() {
         accessor = _;
         return chart;
     };
-
 
     return chart;
 }
