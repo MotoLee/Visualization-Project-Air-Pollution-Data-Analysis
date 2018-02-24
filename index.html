@@ -31,155 +31,58 @@
     stroke-opacity: 0.5;
     stroke-width: 1.25px;
   }
-  /* Always set the map height explicitly to define the size of the div
-       * element that contains the map. */
-      html, body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
+
+  .grid line {
+    stroke: lightgrey;
+    stroke-opacity: 0.7;
+    shape-rendering: crispEdges;
+  }
+
   </style>
 
-  <script type="text/javascript" src="main.js"></script>
-  <link href="style.css" rel="stylesheet" type="text/css">
+  <script type="text/javascript" src="./circular_heatmap/main.js"></script>
+  <link href="circular_heatmap/style.css" rel="stylesheet" type="text/css">
+
+  <!-- <script type="text/javascript" src="./scatter_plot_matrix/main.js"></script>
+  <link href="scatter_plot_matrix/style.css" rel="stylesheet" type="text/css"> -->
 </head>
 
 <body>
-<div>
-<div style="width:100%; height:400px;">
-  <div id="map" style="width:50%; height:400px; float: left;"></div>
-  <div id="right_div" style="width: 50%; height: 400px; float: right;"></div>
-</div>
-<div style="width: 50%; height:500px;">
-  <div id="top_div" style="margin: auto; width: 960px; height: 20px; float: center;">
+<div style="width: 1660px; height: 500px;">
+  <!-- Circular Heat Map -->
+  <div id="right_div" style="width: 700px; height: 700px; float: right;"></div>
+  <!-- Historical Line Chart -->
+  <div id="top_div" style="margin: auto; width: 960px; height: 50px; float: left;">
     <div id="top_left_div" style="float: left;">
       <input type="button" id="slider_reset" value="Reset" onclick="resetHighlight()"></button>
       <input id="slider" type="range">
     </div>
     <div id="top_right_div" style="float: right; "></div>
   </div>
-  <svg width="1280" height="300" style="display: block; margin: auto; float:left"></svg>
+  <!-- <div id="center_div" style="width: 960px; height: 600px; margin: auto;"> -->
+    <svg width="960" height="500" style="display: block; margin: auto;"></svg>
+  <!-- </div> -->
+  <!-- Scatter Plot Matrix -->
+  <!-- <div id="bottom_div" style="width: 960px; height: 960px; margin: auto;">
+  </div> -->
 </div>
-</div>
+
+
+<!-- Parallel Coordinate -->
 <iframe src="https://motolee.github.io/Visualization-Project-Air-Pollution-Data-Analysis/parallel_coordinate/index.html" style="width:100%; height:800px;"></iframe>
+<!-- Scatter Plot -->
 <iframe src="https://motolee.github.io/Visualization-Project-Air-Pollution-Data-Analysis/scatter_plot/index.html" style="width:100%; height:800px;"></iframe>
+
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script>
-      var timelineStart;
-      var timelineDuration;
-      var selFeat;
-      var selStation;
 
-      var map;
-      var heatmap;
-      var stationLocation;
-      function initMap() {
-        map = new google.maps.Map(document.getElementById('map'), {
-          zoom: 7,
-          center: new google.maps.LatLng(23.5712,119.5793),
-         // mapTypeId: 'terrain',
-        //  disableDefaultUI:false,
-        });
-     
-         map.data.setStyle(getCircle);
-
-        function getCircle(feature) {
-         var low = [151, 83, 34];   // color of mag 1.0
-        var high = [5, 69, 54];  // color of mag 6.0 and above
-        var minMag = 0.0;
-        var maxMag = feature.getProperty('max');
-
-        // fraction represents where the value sits between the min and max
-        var fraction = (Math.min(feature.getProperty('mag'), maxMag) - minMag) /
-            (maxMag - minMag);
-    //    console.log(fraction*5);
-        var color = interpolateHsl(low, high, fraction);
-
-        return {
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            strokeWeight: 0.5,
-            strokeColor: '#fff',
-            fillColor: color,
-            fillOpacity: 0.5,
-            // while an exponent would technically be correct, quadratic looks nicer
-            scale: Math.pow(fraction*7, 2)
-          },
-          zIndex: Math.floor(feature.getProperty('mag'))
-        };
-      }
-
-      function interpolateHsl(lowHsl, highHsl, fraction) {
-        var color = [];
-        for (var i = 0; i < 3; i++) {
-          // Calculate color based on the fraction.
-          color[i] = (highHsl[i] - lowHsl[i]) * fraction + lowHsl[i];
-        }
-
-        return 'hsl(' + color[0] + ',' + color[1] + '%,' + color[2] + '%)';
-      }
-
-      map.data.addListener('click',function(evt){
-          //    console.log(evt.feature.getId());
-              drawTimeline(evt.feature.getId(),timelineStart,timelineDuration);
-      });;
-
-      // Loop through the results array and place a marker for each
-      // set of coordinates.
-      d3.csv("station_lat.csv", function(error, data) {
-        heatmapData = [];
-        stationLocation ={};
-        for (var i = 0; i < data.length; i++) {
-
-          var latLng = new google.maps.LatLng(parseFloat(data[i].lat2),parseFloat(data[i].lat1));
-          var feat=new google.maps.Data.Feature(
-            {geometry:latLng,id:data[i].id,properties:{mag:5,title:data[i].id}}
-            );
-          feat.toGeoJson(function(obj){
-       //     console.log(obj);
-            map.data.addGeoJson(obj);
-          });
-         // var resf=map.data.add(feat);
-        //  console.log(resf);
-          heatmapData.push({location:latLng, weight:100});
-          stationLocation[data[i].id]=latLng;
-
-          /*
-          var marker = new google.maps.Marker({
-            position: latLng,
-            stationId:data[i].id,
-            title:data[i].id,
-            map: map
-          });
-*//*
-          attachStationIdToMarker(marker,data[i].id);
-          function attachStationIdToMarker(marker,id){
-            marker.addListener('click',function(){
-              console.log(id);
-              drawTimeline(id);
-            });
-          }*/
-        }
-        /*
-        heatmap = new google.maps.visualization.HeatmapLayer({
-          data: heatmapData,
-          dissipating: true,
-          map: map,
-          radius:5
-        });*/
-      });
-      
-    }
-
-    </script>
-    <script 
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2P7D7x_Db-paQeoObPVNhzkcavhT1lnU&callback=initMap">
-    </script>
-<script>
+var data_path = "./",
+    data_path_day = "./day_avg/",
+    data_path_month = "./month_avg/";
 
 var svg = d3.select("svg"),
     margin = {top: 20, right: 20, bottom: 110, left: 40},
-    margin2 = {top: 230, right: 20, bottom: 20, left: 40},
+    margin2 = {top: 430, right: 20, bottom: 20, left: 40},
     width = +svg.attr("width") - margin.left - margin.right,
     height = +svg.attr("height") - margin.top - margin.bottom,
     height2 = +svg.attr("height") - margin2.top - margin2.bottom;
@@ -223,7 +126,7 @@ var line = d3.line()
     .x(function(d) { return x(d.DATE); })
     .y(function(d) { return y(d.VALUE); });
 
-var defs=svg.append("defs").append("clipPath")
+svg.append("defs").append("clipPath")
   .attr("id", "clip")
   .append("rect")
   .attr("width", width)
@@ -243,11 +146,19 @@ var traits = ["SO2", "CO", "O3", "PM10", "PM2.5", "NOx", "NO", "NO2","AMB_TEMP",
 var myTraitRange = {"SO2":[0, 18], "CO":[0, 3], "O3":[0, 80], "PM10":[0,200], "PM2.5":[0,100], 
   "NOx":[0,80], "NO":[0,20], "NO2":[0,40],"AMB_TEMP":[5,45], "RH":[50,100], "WIND_SPEED":[0,10],
   "WIND_DIREC":[0,360], "WS_HR":[0,10], "WD_HR":[0,360]}
+
 var myTrait = 0;
 var maxDate;
 
-
-
+// var stationsDict = {
+//   "基隆":1,"汐止":2,"萬里":3,"新店":4,"土城":5,"板橋":6,"新莊":7,"菜寮":8,"林口":9,"淡水":10,
+//   "士林":11,"中山":12,"萬華":13,"古亭":14,"松山":15,"大同":16,"桃園":17,"大園":18,"觀音":19,"平鎮":20,
+//   "龍潭":21,"湖口":22,"竹東":23,"新竹":24,"頭份":25,"苗栗":26,"三義":27,"豐原":28,"沙鹿":29,"大里":30,
+//   "忠明":31,"西屯":32,"彰化":33,"線西":34,"二林":35,"南投":36,"斗六":37,"崙背":38,"新港":39,"朴子":40,
+//   "台西":41,"嘉義":42,"新營":43,"善化":44,"安南":45,"台南":46,"美濃":47,"橋頭":48,"仁武":49,"鳳山":50,
+//   "大寮":51,"林園":52,"楠梓":53,"左營":54,"前金":56,"前鎮":57,"小港":58,"屏東":59,"潮州":60,
+//   "恆春":61,"台東":62,"花蓮":63,"陽明":64,"宜蘭":65,"冬山":66,"三重":67,"中壢":68,"竹山":69,"永和":70,
+//   "復興":71,"埔里":72,"馬祖":75,"金門":77,"馬公":78,"關山":80,"麥寮":83}
 
 var stationsDict = {"Keelung":1,"Xizhi":2,"Wanli":3,"Xindian":4,"Tucheng":5,"Banqiao":6,"Xinzhuang":7,
   "Cailiao":8,"Linkou":9,"Danshui":10,"Shilin":11,"Zhongshan":12,"Wanhua":13,"Gutin":14,"Songshan":15,
@@ -281,106 +192,41 @@ var stations_cht = [
   "埔里","馬祖","金門","馬公","關山","麥寮"];
 
 
-var marker=null;
-drawTimeline("1",'2016/1',12*30);
-function drawMarker(id){
-  if(marker!=null){
-    marker.setMap(null);
-  }
-  marker = new google.maps.Marker({
-                          position: stationLocation[id],
-                          title:id,
-                          map: map
-                        });
-  return marker;
-  }
+var myStation = 0;
+
+
 // Initialization
-function drawTimeline(stationId,start,days){
-
-timelineStart=start;
-timelineDuration=days;
-defs.remove();
-focus.remove();
-context.remove();
-
-defs=svg.append("defs").append("clipPath")
-  .attr("id", "clip")
-  .append("rect")
-  .attr("width", width)
-  .attr("height", height);
-
-focus = svg.append("g")
-    .attr("class", "focus")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-context = svg.append("g")
-    .attr("class", "context")
-    .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
-
-dayFilename="day_avg/day_csv_station_"+stationId+".csv";
-monthFilename="month_avg/month_csv_station_"+stationId+".csv";
-
-var stationName;
-for(var name in stationsDict){
-    if(stationsDict.hasOwnProperty(name)){
-      if (stationsDict[name].toString()==stationId)
-          stationName=name;
-    }
-}
-var stationIdx=0;
-for (var i=0;i<stations.length;++i){
-  if(stationName==stations[i])
-    stationIdx=i;
-}
-
-d3.csv(dayFilename, function(error, data) {
+d3.csv(data_path_day + "day_csv_station_" + stationsDict[stations[myStation]] + ".csv", function(error, data) {
   if (error) throw error;
 
-  // console.log(data);
-  traits = d3.keys(data[0]);
-  traits = traits.slice(0, traits.length-2);
-//  console.log(traits);
- var sel = d3.select('.select');
- if(sel.node()!=null){
-      var selectValue = sel.property('value');
-      for (var i = 0; i < traits.length; i++) {
-        if(traits[i] == selectValue) selectValue = i;
-      }
-      myTrait=selectValue;
-  }
-  d3.select('.select').remove();
-  d3.select('#top_right_div text').remove();
-  d3.select('.selector_station').remove();
-  d3.select('#selector_station_notes').remove();
-  d3.select("#right_div").selectAll("*").remove();
-  // Add the selector
-  var selector = d3.select('#top_right_div')
+  // Add the selector_traits
+  var selector_traits = d3.select('#top_right_div')
     .append('select')
-    .attr('class','select')
+    .attr('class','selector_traits')
     .style("margin-left", "100px")
     .on('change',function(){
-      var selectValue = d3.select('select').property('value');
       for (var i = 0; i < traits.length; i++) {
-        if(traits[i] == selectValue) selectValue = i;
+        if(traits[i] == this.value) myTrait = i;
       }
       // remove historical line graph
       focus.selectAll("*").remove();
       context.selectAll("*").remove();
-      drawHistoricalFigure(selectValue, start,days,dayFilename,monthFilename);
+      drawHistoricalFigure(myTrait, "2016/01", 12, myStation);
       // remove circular heat map
       d3.select("#right_div").selectAll("*").remove();
-      drawCircularFigure(selectValue,monthFilename);
-      d3.select('#selector_notes').text('Station '+stationId + ' is selected.');
-    })
+      drawCircularFigure(myTrait, myStation);
+      console.log(traits[myTrait]);
+      d3.select('#selector_traits_notes').text(traits[myTrait] + ' is selected.')
+    });
 
-  var sel_notes = d3.select('#top_right_div')
+  var selector_traits_notes = d3.select('#top_right_div')
       .append('text')
       .style("font-size", "13px")
       .style("margin-left", "10px")
-      .attr('id', 'selector_notes')
-      .text('Station '+stationId + ' is selected.');
+      .attr('id', 'selector_traits_notes')
+      .text(traits[myTrait] + ' is selected.');
 
-  var options = selector.selectAll('option')
+  var selector_traits_options = selector_traits.selectAll('option')
     .data(traits).enter()
     .append('option')
     .text(function (d) { return d; });
@@ -391,58 +237,61 @@ d3.csv(dayFilename, function(error, data) {
     .attr('class','selector_station')
     .style("margin-left", "100px")
     .on('change',function(){
-      var myStation=0;
       for (var i = 0; i < stations.length; i++) {
         if(stations[i] == this.value) myStation = i;
       }
-      var realId=stationsDict[stations[myStation]].toString();
       // remove historical line graph
       focus.selectAll("*").remove();
       context.selectAll("*").remove();
-      dayFilename="day_avg/day_csv_station_"+realId+".csv";
-      drawHistoricalFigure(myTrait, timelineStart,timelineDuration, dayFilename, monthFilename);
+      drawHistoricalFigure(myTrait, "2016/01", 12, myStation);
       // remove circular heat map
       d3.select("#right_div").selectAll("*").remove();
-      monthFilename="month_avg/month_csv_station_"+realId+".csv";
-      drawCircularFigure(myTrait, monthFilename);
+      drawCircularFigure(myTrait, myStation);
+      console.log(stations_cht[myStation]);
       d3.select('#selector_station_notes').text(stations[myStation] + '( ' + stations_cht[myStation] +
-       ' ) is selected.');
-      d3.select('#selector_notes').text('Station '+realId + ' is selected.');
-      drawMarker(realId);
+       ' ) is selected.')
     });
-
-
 
   var selector_station_notes = d3.select('#top_right_div')
       .append('text')
       .style("font-size", "13px")
       .style("margin-left", "10px")
       .attr('id', 'selector_station_notes')
-      .text(stationName + '( ' + stations_cht[stationIdx] + ' ) is selected.');
+      .text(stations[myStation] + ' is selected.');
 
   var selector_station_options = selector_station.selectAll('option')
     .data(stations).enter()
     .append('option')
     .text(function (d) {return d; });
 
-    console.log(stationIdx);
-    d3.select('.selector_station').node().selectedIndex=stationIdx;
-    console.log(d3.select(".selector_station").node());
 
-    d3.select('.select').node().selectedIndex=myTrait;
-  //.selectedIndex=stationIdx;
   // Main function starts here
-  drawHistoricalFigure(myTrait, start,days,dayFilename,monthFilename);
-  drawCircularFigure(myTrait,monthFilename);
-
-  drawMarker(stationId);
+  drawHistoricalFigure(myTrait, "2016/01", 12, myStation);
+  drawCircularFigure(myTrait, myStation);
+  // drawScatterPlotMatrixFigure(myTrait, myStation);
 
 });
-}
-// Circular Heat Map
-function drawCircularFigure(myTrait, filename){
 
-  d3.csv(filename, type2, function(error, data) {
+// function drawScatterPlotMatrixFigure(myTrait, myStation){
+
+//   d3.csv(data_path + "day_csv_station_" + stationsDict[stations[myStation]] + ".csv", type1, function(error, data) {
+//     if (error) throw error;
+
+//     // Should be a number not string
+//     data.forEach(function(d){
+//       for (var i = 0; i < traits.length; i++) {
+//         d[traits[i]] = +d[traits[i]];
+//       }  
+//     });
+
+//     loadScatterPlotMatrix(data, "#bottom_div", traits[myTrait]);
+//   });
+// }
+
+// Circular Heat Map
+function drawCircularFigure(myTrait, myStation){
+
+  d3.csv(data_path_month + "month_csv_station_" + stationsDict[stations[myStation]] + ".csv", type2, function(error, data) {
     if (error) throw error;
 
     // Should be a number not string
@@ -455,25 +304,24 @@ function drawCircularFigure(myTrait, filename){
     var radial_labels = ["2012","2013","2014","2015","2016"];
     var segment_labels = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-    var inputData =[];
+    var inputData =[]
     for (var i = 0; i < data.length; i++) {
       inputData.push({"month": data[i].DATE.getMonth()+1, 
         "year": data[i].DATE.getFullYear(), "value": data[i][traits[myTrait]]});
     }
 
-    loadCircularHeatMap(inputData,"#right_div",radial_labels, segment_labels, traits[myTrait]);
+    loadCircularHeatMap(inputData,"#right_div",radial_labels, segment_labels, myTrait, myStation);
 
   });
 }
 
 
-
-function drawHistoricalFigure(myTrait, initDate,days,dayFilename,monthFilename){
+function drawHistoricalFigure(myTrait, initDate, initDateLen, myStation){
   
-  d3.csv(dayFilename, type1, function(error, day_data) {
+  d3.csv(data_path_day + "day_csv_station_" + stationsDict[stations[myStation]] + ".csv", type1, function(error, day_data) {
     if (error) throw error;
 
-    d3.csv(monthFilename, type2, function(error, month_data) {
+    d3.csv(data_path_month + "month_csv_station_" + stationsDict[stations[myStation]] + ".csv", type2, function(error, month_data) {
       if (error) throw error;
 
       // console.log(day_data);
@@ -501,7 +349,7 @@ function drawHistoricalFigure(myTrait, initDate,days,dayFilename,monthFilename){
       maxDate = parseDate1(maxDate.getFullYear().toString() + "/" + (maxDate.getMonth() + 1) + "/31");
       dictAvg.push({"DATE": maxDate, "VALUE": maxDateValue});
       // console.log(dictAvg);  
-      dayDataGlobal=dictData;
+
       // console.log(traits);
       var MAX_VALUE = 1.01 * d3.max(dictData, function(d) { return d.VALUE; });
       document.getElementById("slider").max = MAX_VALUE.toString();
@@ -509,11 +357,10 @@ function drawHistoricalFigure(myTrait, initDate,days,dayFilename,monthFilename){
       document.getElementById("slider").step = MAX_VALUE/100;
       d3.select("#slider").on("input", function() { hightlight(+this.value); });
       d3.select("#hightlight_text").remove();
-      // d3.select("#top_left_div").append('text').attr('id',"hightlight_text")
-      //   .text(Math.ceil((MAX_VALUE/2)*100)/100);
 
       x.domain(d3.extent(dictData, function(d) { return d.DATE; }));
-      y.domain([0, d3.max(dictData, function(d) { return d.VALUE; })]);
+      y.domain([myTraitRange[traits[myTrait]][0], Math.min(
+        myTraitRange[traits[myTrait]][1], 1.1 * d3.max(dictData, function(d) { return d.VALUE; }))]);
       x2.domain(x.domain());
       y2.domain(y.domain());
 
@@ -522,6 +369,7 @@ function drawHistoricalFigure(myTrait, initDate,days,dayFilename,monthFilename){
       focus.append("g")     
           .attr("class", "grid")
           .call(d3.axisLeft(y).tickSize(-width).tickFormat(""));
+      
       focus.append("path")
           .datum(dictData)
           .attr("class", "area")
@@ -543,7 +391,7 @@ function drawHistoricalFigure(myTrait, initDate,days,dayFilename,monthFilename){
           .attr("x", function(d) { return x(d.DATE); })
           .attr("y", function(d) { return y(d.VALUE); })
           .attr('fill', "none")
-          .attr("width", width / day_data.length)
+          .attr("width", 2)
           .attr("height", function(d) { return height - y(d.VALUE); })
           .on("mouseover", function(d, i){
             svg.select("g").append("text")
@@ -585,7 +433,7 @@ function drawHistoricalFigure(myTrait, initDate,days,dayFilename,monthFilename){
           .call(zoom);
 
       // Set initial zoom level
-      svg.call(zoom.transform, d3.zoomIdentity.scale(day_data.length/days)
+      svg.call(zoom.transform, d3.zoomIdentity.scale(month_data.length/initDateLen)
         .translate(-x(parseDate2(initDate)), 0));
 
     });
@@ -604,50 +452,6 @@ function type2(d) {
   d.DATE = parseDate2(d.DATE);
   return d;
 }
-var dayDataGlobal;
-function syncMap(dataRange){
-  var d1= new Date(dataRange[0]);
-  var d2= new Date(dataRange[1]);
-  var oneDay = 24*60*60*1000; // hours*minutes*seconds*milliseconds
-
-  var diffDays = Math.round(Math.abs((d1.getTime() - d2.getTime())/(oneDay)));
-
-  if(d1.getFullYear()!=2012 && d1.getMonth()!=0 &&
-    d2.getFullYear()!=2016 &&d2.getMonth()!=11){
-    timelineStart=d1.getFullYear()+'/'+(d1.getMonth()+1);
-    timelineDuration=diffDays;
-    console.log(timelineStart);
-  }
-  var p1=d1.getFullYear()+'/'+(d1.getMonth()+1)+'/'+d1.getDate();
-  var p2=d2.getFullYear()+'/'+(d2.getMonth()+1)+'/'+d2.getDate();
-  var selectValue = d3.select('select').property('value');
-      for (var i = 0; i < traits.length; i++) {
-        if(traits[i] == selectValue) selectValue = i;
-      }
-  d3.json('/query?d1='+p1+'&d2='+p2+'&f='+selectValue,function(err,data){
- //   console.log(data);
-    var heatdata=[];
-    var stationIds=d3.keys(data);
-    var maxVal=d3.max(d3.values(data));
-
-  //  console.log(maxVal);
-    stationIds.forEach(function(d){
-      var feat=new google.maps.Data.Feature(
-            {geometry:stationLocation[d],
-              id:d,
-              properties:{mag:data[d],
-                max:maxVal,
-                title:d}}
-            );
-      map.data.add(feat);
-//      heatdata.push({location:stationLocation[d],
-//        weight:data[d]});
-    });
-  //  console.log(heatdata);
- //   heatmap.setData(heatdata);
-  });
-
-}
 
 function brushed() {
   if (d3.event.sourceEvent && d3.event.sourceEvent.type === "zoom") return; // ignore brush-by-zoom
@@ -660,9 +464,6 @@ function brushed() {
   svg.select(".zoom").call(zoom.transform, d3.zoomIdentity
       .scale(width / (s[1] - s[0]))
       .translate(-s[0], 0));
- // console.log((s.map(x2.invert, x2));
-  syncMap(s.map(x2.invert, x2));
-
 }
 
 function zoomed() {
@@ -691,10 +492,9 @@ function hightlight(newValue)
 
 function resetHighlight(){
   d3.select("#hightlight_text").remove();
-  document.getElementById("slider").value = MAX_VALUE/2;
+  // document.getElementById("slider").value = MAX_VALUE/2;
   focus.selectAll(".bar").attr('fill', "none");
 }
-
 
 
 
