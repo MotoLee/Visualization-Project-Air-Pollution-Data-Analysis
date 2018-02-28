@@ -10,10 +10,10 @@ The quality of air condition in Taiwan used to be pretty good. However, in recen
 In our final project, we utilize the geographical and time-series visualization techniques to help people find out the possible causes of air pollution; to help people predict future air conditions based on the current pattern; to help people make decisions like "which city should I travel for health concern?" or "In which area should we enforce environmental protection regulations?". 
 
 Our system contains following components: 
-* A time-series line chart - which displays all historical data in five years; 
-* A circular heatmap - which reveals the change patterns of values in a yearly-base;
-* A parallel coordinate - which compares the relations between specific pollutants (at most four items);
-* A scatter plot matrix - which helps users identify correlation between different variables. 
+* **A time-series line chart** - which displays all historical data in five years; 
+* **A circular heatmap** - which reveals the change patterns of values in a yearly-base;
+* **A parallel coordinate** - which compares the relations between specific pollutants (at most four items);
+* **A scatter plot matrix** - which helps users identify correlation between different variables. 
 
 Our system is very user-interactive. The users could click on the Google map to see the air pollution data on that location. Also, they could select several variables to analyze their correlation via drop-down lists. They could select a specific time period of data to focus on further detailed information and changes by using the adjustable timeline. 
 
@@ -81,7 +81,7 @@ From parallel coordinates, it is easy to know the relationship between two dimen
 
 ![](report/parallel_coordinate.png)
 
-For example, the lines between axes of PM2.5 and PM10 are almost parallel, which means both pollutants are highly related to each other. It is intuitive because they are both represents toxic particles found in the air, including dust, dirt, soot, smoke, and liquid droplets, only different in size of particles. However, aces of PM10 and wind speed are obviously negatively related. It is also intuitive because strong wind can blow toxic particles to nearby regions and bring fresh air from rural area or sea. Also, both axes of PM2.5 and month are kind of negatively related because lines are x-crossed. This finding matches to the observation in line chart and circular heat map.
+For example, the lines between axes of PM2.5 and PM10 are mostly parallel, which means both pollutants are highly related to each other. It is intuitive because they are both represents toxic particles found in the air, including dust, dirt, soot, smoke, and liquid droplets, only different in size of particles. However, aces of PM10 and wind speed are obviously negatively related. It is also intuitive because strong wind can blow toxic particles to nearby regions and bring fresh air from rural area or sea. Also, both axes of PM2.5 and month are kind of negatively related because lines are x-crossed. This finding matches to the observation in line chart and circular heat map. Another interesting finding is that the wind-direction are correlated with the concentration of PM2.5 and PM10. In Taiwan during the winter, there are strong northeastern Monsoon which is originated from northwestern part from China. It implies that air pollutions in Taiwan is kindly related to those in China.
 
 The list below shows correct values of all coordinates in a year. Besides, this figure also supports brushing. We can choose a region an axis to show only small parts of data. The list will be updated based on selected region automatically.
 
