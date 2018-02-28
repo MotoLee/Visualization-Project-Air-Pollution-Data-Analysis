@@ -5,6 +5,8 @@ Link: https://motolee.github.io/Visualization-Project-Air-Pollution-Data-Analysi
 ## Introduction
 The quality of air condition in Taiwan used to be pretty good. However, in recent years, the quality becomes worse and worse every year. People never experienced such blur eyesight before. Many people claim that with the rapid development of environment demanding industries, the quality of air rapidly worsen. Yet, some might argue that it is due to the air pollutions brought by the wind blows from China, instead of those local factories.
 
+![](report/taipei.png?raw=true)
+
 In our final project, we utilize the geographical and time-series visualization techniques to help people find out the possible causes of air pollution; to help people predict future air conditions based on the current pattern; to help people make decisions like "which city should I travel for health concern?" or "In which area should we enforce environmental protection regulations?". 
 
 Our system contains following components: 
@@ -59,11 +61,16 @@ The users can choose which type of collecting data they are focusing on. The use
   #### (D) Highlight tool:
 This tool highlights the data which exceeds a specific value using a red bar. Those red bars indicated the value exceed the selected threshold. The slider is used to increase or decrease the threshold. It is useful to let us know how many days the polution value are exceed the threshold.
 
+![](report/historical_area_line_chart_highlight.png?raw=true)
+
+
 Ref: https://bl.ocks.org/mbostock/34f08d5e11952a80609169b7917d4172
 
 ### 2. Circular Heatmap
 
 A circular heatmap is a graphical representation of data where the individual values contained in a circle shape. It displays quantitative data as an array of circular segments, colored according to value. It is a good way to display cyclic data in a well-chosen time period, in order to show a pattern as value changes.
+
+![](report/circular_heatmap.png?raw=true)
 
 Since our data cover from 2012 January to 2016 December, there are totally 60 blocks. Each black represents the monthly average data of the selected attribute. For example, we observe the changes of PM2.5 at the Tucheng station. It is obvious to tell that the PM2.5 pollution in winter is much more serious than that in summer, and every year has this pattern. If we look through all PM2.5 value of all stations, we can find all stations have the same property. With this observation, we can suggest people in Taiwan avoiding outdoor activity. Or, if some travelers want to visit Taiwan in winter, we could suggest notify them of bad air condition.
 
@@ -74,6 +81,8 @@ Ref: http://bl.ocks.org/arpitnarechania/b0bdc4f9a377ea9d8612677e12f65b82
 Parallel coordinates is a popular way to visualize high-dimensional dataset and analyzing the relationship between different dimension data. There are k-vertical parallel axes, corresponding to the dimension of input data. The position of the vertex on the i-th axis corresponds to the i-th coordinate of the point. Since the order of axes in parallel coordinates is important, here we allow the users to choose the order by using drop-down lists. The first axis is year and the second axis is month in a year, and they are fixed because it is easy to understand which time period of data is selected.
 
 From parallel coordinates, it is easy to know the relationship between two dimensions. That is, if there is a positive relationship between two dimensions, in the figure we could find most lines between two parallel axes are somewhat parallel to each others. When most lines cross look like X-shapes, it means two dimension negative relationship. When most lines cross randomly, it shows that there is no obvious relationship. 
+
+![](report/parallel_coordinate.png?raw=true)
 
 For example, the lines between axes of PM2.5 and PM10 are almost parallel, which means both pollutants are highly related to each other. It is intuitive because they are both represents toxic particles found in the air, including dust, dirt, soot, smoke, and liquid droplets, only different in size of particles. However, aces of PM10 and wind speed are obviously negatively related. It is also intuitive because strong wind can blow toxic particles to nearby regions and bring fresh air from rural area or sea. Also, both axes of PM2.5 and month are kind of negatively related because lines are x-crossed. This finding matches to the observation in line chart and circular heat map.
 
@@ -86,6 +95,8 @@ Ref: http://bl.ocks.org/eesur/1a2514440351ec22f176
 The scatter plot matrix shows all the pair-wise scatter plots of the variables on a single view with multiple scatterplots in a matrix format. We implemented a 3 by 3 matrix of scatterplots. Generally speaking, the scatterplot matrix is a great way to roughly determine if any two of the input variables have obvious correlation. 
 
 Here, we show all data of three attributes at a station. At top of the figure, there is three drop-down lists for users to choose which attributes are now focused on. All the points are categorized by twelve colors: Red, Green, Blue, Yellow, purple, and so on. However, we cannot find any relationship between months.
+
+![](report/scatter_plot_matrix.png?raw=true)
 
 Ref: https://bl.ocks.org/mbostock/4063663
 
