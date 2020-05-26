@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+  <link href="./style.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+<div style="width: 1000px; height: 800px;">
+  <!-- Historical Line Chart -->
+  <div id="top_div" style="margin: auto; width: 1000px; height: 300px; float: left;">
+    <!-- Circular Heat Map -->
+    <div id="right_div" style="width: 300px; height: 300px; float: left;"></div>
+    <div id="top_left_div" style="margin: 30px; float: right;">
+      <span id="slider_text" style="margin: 10px; font-family: arial;">Set a threshold:</span>
+      <input id="slider" type="range" style="margin: 10px;" >
+      <input type="button" id="slider_reset" value="Reset" onclick="resetHighlight()" style="margin: 10px;">
+    </div>
+    <div id="top_right_div" style="float: right; font-family: arial;"></div>
+  </div>
+  <svg width="1000" height="500" style="margin: auto; float:left;"></svg>
+</div>
+</body>
+
+<script type="text/javascript" src="./constants.js"></script>
+<script type="text/javascript" src="https://d3js.org/d3.v4.min.js"></script>
+<script type="text/javascript" src="./circular-heat-map.js"></script>
+<script type="text/javascript" src="./main.js"></script>
+</html>
