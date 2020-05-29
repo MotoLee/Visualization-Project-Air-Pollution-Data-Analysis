@@ -355,7 +355,7 @@ function compute_centroids(row) {
 	var p = __.dimensions;
 	var cols = p.length;
 	var a = 0.5;			// center between axes
-	for (var i = 0; i < cols; ++i) {
+	for (let i = 0; i < cols; ++i) {
 		// centroids on 'real' axes
 		var x = position(p[i]);
 		var y = yscale[p[i]](row[p[i]]);
@@ -386,7 +386,7 @@ function compute_control_points(centroids) {
 
 	cps.push(centroids[0]);
 	cps.push($V([centroids[0].e(1) + a*2*(centroids[1].e(1)-centroids[0].e(1)), centroids[0].e(2)]));
-	for (var col = 1; col < cols - 1; ++col) {
+	for (let col = 1; col < cols - 1; ++col) {
 		var mid = centroids[col];
 		var left = centroids[col - 1];
 		var right = centroids[col + 1];
@@ -428,9 +428,9 @@ function single_curve(d, ctx) {
 	var cps = compute_control_points(centroids);
 
 	ctx.moveTo(cps[0].e(1), cps[0].e(2));
-	for (var i = 1; i < cps.length; i += 3) {
+	for (let i = 1; i < cps.length; i += 3) {
 		if (__.showControlPoints) {
-			for (var j = 0; j < 3; j++) {
+			for (let j = 0; j < 3; j++) {
 				ctx.fillRect(cps[i+j].e(1), cps[i+j].e(2), 2, 2);
 			}
 		}
@@ -654,7 +654,7 @@ pc.reorderable = function() {
 // pairs of adjacent dimensions
 pc.adjacent_pairs = function(arr) {
   var ret = [];
-  for (var i = 0; i < arr.length-1; i++) {
+  for (let i = 0; i < arr.length-1; i++) {
     ret.push([arr[i],arr[i+1]]);
   };
   return ret;
@@ -1284,7 +1284,7 @@ d3.renderQueue = (function(func) {
       // render queue splits the original data set, we'll have to be slightly
       // more carefull about passing the correct index with the data item.
       var end = Math.min(_i + _rate, _queue.length);
-      for (var i = _i; i < end; i++) {
+      for (let i = _i; i < end; i++) {
         func(_queue[i], i);
       }
       _i += _rate;

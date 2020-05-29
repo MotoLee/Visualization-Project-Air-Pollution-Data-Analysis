@@ -109,7 +109,7 @@ window.onload = function () {
       .attr('class','selector_station')
       .style("margin", "20px")
       .on('change',function(){
-        for (var i = 0; i < STATIONS.length; i++) {
+        for (let i = 0; i < STATIONS.length; i++) {
           if(STATIONS[i] == this.value) myStation = i;
         }
 
@@ -153,7 +153,7 @@ function drawCircularHeatMap(myTrait, myStation) {
 
     // Should be a number not string
     data.forEach(item => {
-      for (var i = 0; i < TRAITS.length; i++) {
+      for (let i = 0; i < TRAITS.length; i++) {
         item[TRAITS[i]] = +item[TRAITS[i]];
       }
     });

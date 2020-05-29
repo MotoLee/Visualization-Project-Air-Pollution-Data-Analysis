@@ -67,7 +67,7 @@ d3.csv(data_path_day + "day_csv_station_" + stationsDict[stations[myStation]] + 
     if (error) throw error;
 
     data.forEach(function(d) {
-      for (var i = 0; i < traits.length; i++) {
+      for (let i = 0; i < traits.length; i++) {
         d[traits[i]] = +d[traits[i]];
       }
       d["YEAR"] = d["DATE"].getFullYear();
@@ -76,12 +76,12 @@ d3.csv(data_path_day + "day_csv_station_" + stationsDict[stations[myStation]] + 
     console.log(data);
 
     // remove outlier: remove top 1% outlier
-    for (var i = 0; i < traits.length; i++) {
+    for (let i = 0; i < traits.length; i++) {
       if(traits[i] != "AMB_TEMP" && traits[i] != "WIND_DIREC" && traits[i] !=  "WD_HR"){
-        for (var j = 0; j < 0.01 * data.length; j++) {
+        for (let j = 0; j < 0.01 * data.length; j++) {
           var mymax = d3.max(data, function(d) { return d[traits[i]]; });
           console.log(traits[i] + ": " + mymax);
-          for (var k = 0; k < data.length; k++) {
+          for (let k = 0; k < data.length; k++) {
             if(data[k][traits[i]] == mymax) data.splice(k,1);
           }
         }

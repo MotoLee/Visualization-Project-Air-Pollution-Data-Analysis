@@ -1,184 +1,22 @@
-<!doctype html>
-
-<!-- http://syntagmatic.github.com/parallel-coordinates/ -->
-<link rel="stylesheet" type="text/css" href="style.css">
-
-<script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.13/d3.min.js"></script>
-<script src="d3.parcoords.js"></script>
-<script src="divgrid.js"></script>
-
-<div id="selectors"></div>
-<div id="example" class="parcoords"></div>
-<div id="grid"></div>
-
-<script id="brushing">// quantitative colour scale
-var green_to_blue = d3.scale.quantile().domain([1, 12])
-  .range(["green","red","orange","blue"]);
-  // .range(["#009987","#184FC7","#E56717","#FF0000","#4CC552","#990012",
-  //   "#40A1C2","#C68E17","#7D95FF","#C44DBE","#FFD801","#C7A317"]);
-
-var color = function(d) { return green_to_blue(d['MONTH']); };
-
-var myStation = 0;
-
-var stationsDict = {"Keelung":1,"Xizhi":2,"Wanli":3,"Xindian":4,"Tucheng":5,"Banqiao":6,"Xinzhuang":7,
-  "Cailiao":8,"Linkou":9,"Danshui":10,"Shilin":11,"Zhongshan":12,"Wanhua":13,"Gutin":14,"Songshan":15,
-  "Datong":16,"Taoyuan":17,"Dayuan":18,"Guanyin":19,"Pingjen":20,"Longtan":21,"Hukou":22,"Zhudong":23,
-  "Hsinchu":24,"Toufen":25,"Miaoli":26,"Sanyi":27,"Fengyuan":28,"Shalu":29,"Dali":30,"Zhongming":31,
-  "Xitun":32,"Changhua":33,"Xianxi":34,"Erlin":35,"Nantou":36,"Douliu":37,"Lunbei":38,"Xingang":39,
-  "Puzi":40,"Taixi":41,"Chiayi":42,"Xinying":43,"Shanhua":44,"Annan":45,"Tainan":46,"Meinong":47,
-  "Qiaotou":48,"Renwu":49,"Fengshan":50,"Daliao":51,"Linyuan":52,"Nanzi":53,"Zuoying":54,"Qianjin":56,
-  "Qianzhen":57,"Xiaogang":58,"Pingtung":59,"Chaozhou":60,"Hengchun":61,"Taitung":62,"Hualien":63,
-  "Yangming":64,"Yilan":65,"Dongshan":66,"Sanchong":67,"Zhongli":68,"Zhushan":69,"Yonghe":70,
-  "Fuxing":71,"Puli":72,"Alishan":75,"Kinmen":77,"Magong":78,"Guanshan":80,"Mailiau":83}
-
-var stations = ["Keelung","Xizhi","Wanli","Xindian","Tucheng","Banqiao","Xinzhuang","Cailiao","Linkou",
-  "Danshui","Shilin","Zhongshan","Wanhua","Gutin","Songshan","Datong","Taoyuan","Dayuan",
-  "Guanyin","Pingjen","Longtan","Hukou","Zhudong","Hsinchu","Toufen","Miaoli","Sanyi",
-  "Fengyuan","Shalu","Dali","Zhongming","Xitun","Changhua","Xianxi","Erlin","Nantou","Douliu",
-  "Lunbei","Xingang","Puzi","Taixi","Chiayi","Xinying","Shanhua","Annan","Tainan","Meinong",
-  "Qiaotou","Renwu","Fengshan","Daliao","Linyuan","Nanzi","Zuoying","Qianjin","Qianzhen",
-  "Xiaogang","Pingtung","Chaozhou","Hengchun","Taitung","Hualien","Yangming","Yilan","Dongshan",
-  "Sanchong","Zhongli","Zhushan","Yonghe","Fuxing","Puli","Alishan","Kinmen","Magong","Guanshan",
-  "Mailiau"];
-
-var stations_cht = [
-  "基隆","汐止","萬里","新店","土城","板橋","新莊","菜寮","林口","淡水",
-  "士林","中山","萬華","古亭","松山","大同","桃園","大園","觀音","平鎮",
-  "龍潭","湖口","竹東","新竹","頭份","苗栗","三義","豐原","沙鹿","大里",
-  "忠明","西屯","彰化","線西","二林","南投","斗六","崙背","新港","朴子",
-  "台西","嘉義","新營","善化","安南","台南","美濃","橋頭","仁武","鳳山",
-  "大寮","林園","楠梓","左營","前金","前鎮","小港","屏東","潮州","恆春",
-  "台東","花蓮","陽明","宜蘭","冬山","三重","中壢","竹山","永和","復興",
-  "埔里","馬祖","金門","馬公","關山","麥寮"];
-
-
-var parseDate1 = d3.time.format("%Y/%m/%d"),
-    parseDate2 = d3.time.format("%Y/%m");
-
-var traits = ["SO2", "CO", "O3", "PM10", "PM2.5", "NOx", "NO", "NO2","AMB_TEMP", "RH", "WIND_SPEED",
-  "WIND_DIREC", "WS_HR", "WD_HR"];
-var myTraits = ["SO2", "CO", "O3", "PM10"];
-
-var selector_station = d3.select("#selectors").append('select')
-  .attr('class','selector_station')
-  .on('change',function(){
-    for (var i = 0; i < stations.length; i++) {
-        if(stations[i] == this.value) myStation = i;
-      }
-    d3.select("#example").selectAll("*").remove();
-    DrawParallelCoordinate(myTraits, myStation);
-  });
-
-var selector_station_notes = d3.select('#selectors').append('text')
-  .style("font-size", "13px")
-  .style("margin-left", "10px")
-  .attr('id', 'selector_station_notes')
-  .text('');
-var selector_station_options = selector_station.selectAll('option')
-  .data(stations).enter()
-  .append('option')
-  .text(function (d) {return d; });
-
-var selector_traits_0 = d3.select("#selectors").append('select')
-  .attr('id','selector_traits_0')
-  .style("margin-left", "120px")
-  .on('change',function(){
-    myTraits[0] = this.value;
-    d3.select("#example").selectAll("*").remove();
-    DrawParallelCoordinate(myTraits, myStation);
-  });
-
-var selector_traits_0_options = selector_traits_0.selectAll('option')
-  .data(traits).enter().append('option')
-  .text(function (d) { return d; });
-
-var selector_traits_1 = d3.select("#selectors").append('select')
-  .attr('id','selector_traits_1')
-  .style("margin-left", "20px")
-  .on('change',function(){
-    myTraits[1] = this.value;
-    d3.select("#example").selectAll("*").remove();
-    DrawParallelCoordinate(myTraits, myStation);
-  });
-
-var selector_traits_1_options = selector_traits_1.selectAll('option')
-  .data(traits).enter().append('option')
-  .text(function (d) { return d; });
-
-var selector_traits_2 = d3.select("#selectors").append('select')
-  .attr('id','selector_traits_2')
-  .style("margin-left", "20px")
-  .on('change',function(){
-    myTraits[2] = this.value;
-    d3.select("#example").selectAll("*").remove();
-    DrawParallelCoordinate(myTraits, myStation);
-  });
-
-var selector_traits_2_options = selector_traits_2.selectAll('option')
-  .data(traits).enter().append('option')
-  .text(function (d) { return d; });
-
-var selector_traits_3 = d3.select("#selectors").append('select')
-  .attr('id','selector_traits_3')
-  .style("margin-left", "20px")
-  .on('change',function(){
-    myTraits[3] = this.value;
-    d3.select("#example").selectAll("*").remove();
-    DrawParallelCoordinate(myTraits, myStation);
-  });
-
-var selector_traits_3_options = selector_traits_3.selectAll('option')
-  .data(traits).enter().append('option')
-  .text(function (d) { return d; });
-
-DrawParallelCoordinate(myTraits, myStation);
-
-function DrawParallelCoordinate(myTraits){
-
-    var parcoords = d3.parcoords()("#example")
-      .color(color)
-      .alpha(0.5);
-
-    // load csv file and create the chart
-    d3.csv('../month-avg/month_csv_station_' + stationsDict[stations[myStation]] + '.csv', function(data) {
-
-        // Data pro-processing
-        new_data = [];
-        for (var i = 0; i < data.length; i++) {
-            new_data.push({"YEAR": parseDate2.parse(data[i]["DATE"]).getFullYear(),
-                "MONTH": (parseDate2.parse(data[i]["DATE"]).getMonth()+1)});
-            new_data[i][myTraits[0]] = Math.round(data[i][myTraits[0]] * 1000) / 1000;
-            new_data[i][myTraits[1]] = Math.round(data[i][myTraits[1]] * 1000) / 1000;
-            new_data[i][myTraits[2]] = Math.round(data[i][myTraits[2]] * 1000) / 1000;
-            new_data[i][myTraits[3]] = Math.round(data[i][myTraits[3]] * 1000) / 1000;
-        }
-
-        // Main
-        parcoords.data(new_data).render().brushMode("1D-axes");  // enable brushing
-
-        // create data table, row hover highlighting
-        var grid = d3.divgrid();
-        d3.select("#grid")
-            .datum(new_data.slice(0,12))
-            .call(grid)
-            .selectAll(".row")
-            .on({
-                "mouseover": function(d) { parcoords.highlight([d]) },
-                "mouseout": parcoords.unhighlight
-            });
-
-        // update data table on brush event
-        parcoords.on("brush", function(d) {
-            d3.select("#grid")
-                .datum(d.slice(0,10))
-                .call(grid)
-                .selectAll(".row")
-                .on({
-                  "mouseover": function(d) { parcoords.highlight([d]) },
-                  "mouseout": parcoords.unhighlight
-            });
-        });
-    });
-}
-</script>
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html lang="en">
+<title>Parallel Coordinate</title>
+<head>
+    <!-- Reference: http://syntagmatic.github.com/parallel-coordinates/ -->
+    <link href="./style.css" rel="stylesheet" type="text/css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.13/d3.min.js"></script>
+    <script src="./d3.parcoords.js"></script>
+    <script src="./divgrid.js"></script>
+    <script src="./constants.js"></script>
+    <script src="./main.js"></script>
+</head>
+<body>
+    <div id="selectors" style="display: flex">
+        <div id="station_selectors" style="flex: 1 1 auto"></div>
+        <div id="trait_selectors" style="flex: 1 1 auto"></div>
+    </div>
+    <div id="parallel-coordinate" class="parcoords"></div>
+    <div id="grid"></div>
+</body>
+</html>
