@@ -87,7 +87,7 @@ Parallel coordinates is a popular way to visualize high-dimensional dataset and 
 
 From parallel coordinates, it is easy to know the relationship between two dimensions. That is, if there is a positive relationship between two dimensions, in the figure we could find most lines between two parallel axes are somewhat parallel to each others. When most lines cross look like X-shapes, it means two dimension negative relationship. When most lines cross randomly, it shows that there is no obvious relationship. 
 
-![](./report/parallel-coordinate.png)
+![](./report/parallel_coordinate.png)
 
 For example, the lines between axes of PM2.5 and PM10 are mostly parallel, which means both pollutants are highly related to each other. It is intuitive because they are both represents toxic particles found in the air, including dust, dirt, soot, smoke, and liquid droplets, only different in size of particles. However, aces of PM10 and wind speed are obviously negatively related. It is also intuitive because strong wind can blow toxic particles to nearby regions and bring fresh air from rural area or sea. Also, both axes of PM2.5 and month are kind of negatively related because lines are x-crossed. This finding matches to the observation in line chart and circular heat map. Another interesting finding is that the wind-direction are correlated with the concentration of PM2.5 and PM10. In Taiwan during the winter, there are strong northeastern Monsoon which is originated from northwestern part from China. It implies that air pollutions in Taiwan is kindly related to those in China.
 

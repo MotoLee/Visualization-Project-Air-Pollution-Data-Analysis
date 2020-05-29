@@ -25,7 +25,7 @@ window.onload = function () {
             }
             selector_station_notes.text(STATIONS_CHT[myStationIndex]);
             d3.select("#parallel-coordinate").selectAll("*").remove();
-            DrawParallelCoordinate(myTraits, myStationIndex);
+            CreateParallelCoordinate(myTraits, myStationIndex);
         });
 
     var selector_station_notes = d3.select('#station_selectors')
@@ -50,13 +50,18 @@ window.onload = function () {
             .on('change',function() {
                 myTraits[i] = this.value;
                 d3.select("#parallel-coordinate").selectAll("*").remove();
-                DrawParallelCoordinate(myTraits, myStationIndex);
+                DrawParallelCoordinate(myTraits, myStationIndex, false);
             });
     }
 
+    // load csv file and create the chart
+    CreateParallelCoordinate(myTraits, myStationIndex);
+};
+
+function CreateParallelCoordinate(myTraits, myStationIndex) {
+
     var month_path = "../month-avg/month_csv_station_" + STATIONS_DICTIONARY[STATIONS[myStationIndex]] + ".csv";
 
-    // load csv file and create the chart
     d3.csv(month_path, function(data) {
 
         // Data pre-processing
@@ -72,7 +77,8 @@ window.onload = function () {
 
         DrawParallelCoordinate(myTraits, myStationIndex);
     });
-};
+
+}
 
 function DrawParallelCoordinate(myTraits, myStationIndex) {
 
