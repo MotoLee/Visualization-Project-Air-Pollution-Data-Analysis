@@ -54,7 +54,7 @@ Besides, there are totally 21 possible types of collected values: SO2, CO, O3, P
 The historical line chart displays information as a series of data points connected by straight line segments. Here, we show all the historical data of one specific item at one station. Generally speaking, a line chart is often useful to visualize a trend in data over time. 
   
 In the figure, there are four parts.
-![](./report/historical_area_line_chart.png? =100x)
+![](./report/historical_area_line_chart.png)
 
   #### Line/Area Chart with brush:
 The data starts from 2012 Jan to 2016 Dec. First, the blue area shows the monitoring value in a day, which represents the day average value of specific collecting data at a station. Second, the black line depicts the monthly average data, which represents the monthly average value of specific collecting data at a station. The average data is useful to show a trend in a long period. For example, this figure shows all data of PM2.5 in the Mailiau station from January to December in 2015. From the black line, we can easily find that the pollution of PM2.5 in the winter is much more serious than in the summer.
